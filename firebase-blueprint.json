@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "Member": {
+      "title": "Member",
+      "description": "A member or applicant of the organization.",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the member"
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the member's profile photo"
+        },
+        "designation": {
+          "type": "string",
+          "enum": [
+            "সভাপতি (President)",
+            "সহ-সভাপতি (Vice-President)",
+            "সাধারণ সম্পাদক (General Secretary)",
+            "সহ সাধারণ সম্পাদক (Assistant General Secretary)",
+            "সাংগঠনিক সম্পাদক (Organizing Secretary)",
+            "অর্থ সম্পাদক (Treasurer)",
+            "সহ অর্থ সম্পাদক (Assistant Treasurer)",
+            "প্রচার সম্পাদক (Publicity Secretary)",
+            "সহ প্রচার সম্পাদক (Assistant Publicity Secretary)",
+            "মণ্ডপ পরিচালক (Pandal Director)",
+            "সদস্য (Member)"
+          ],
+          "description": "Rank or designation within the organization"
+        },
+        "dob": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of birth"
+        },
+        "bloodGroup": {
+          "type": "string",
+          "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+          "description": "Blood group of the member"
+        },
+        "keyword": {
+          "type": "string",
+          "description": "Unique identifier generated from name and birth year"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Application status"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the application was submitted"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the application was last updated"
+        }
+      },
+      "required": ["fullName", "photoURL", "designation", "dob", "bloodGroup", "keyword", "status"]
+    }
+  },
+  "firestore": {
+    "members/{memberId}": {
+      "schema": "Member",
+      "description": "Collection of organization members and applicants"
+    }
+  }
+}

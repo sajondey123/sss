@@ -1,0 +1,87 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: members
+// Document ID: auto-generated or keyword
+// Fields:
+//   - fullName: string (required)
+//   - photoURL: string (required, URL)
+//   - designation: string (required)
+//   - dob: string (required, date)
+//   - bloodGroup: string (required, enum)
+//   - keyword: string (required, unique)
+//   - status: string (required, enum: pending, approved, rejected)
+//   - createdAt: timestamp (required)
+//   - updatedAt: timestamp (required)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "sajondey123@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidMember(data) {
+      return data.keys().hasAll(['fullName', 'photoURL', 'designation', 'dob', 'bloodGroup', 'keyword', 'status', 'createdAt', 'updatedAt']) &&
+             data.fullName is string && data.fullName.size() > 0 && data.fullName.size() < 100 &&
+             data.photoURL is string && data.photoURL.matches("^https?://.*") &&
+             data.designation is string && data.designation in [
+               "সভাপতি (President)",
+               "সহ-সভাপতি (Vice-President)",
+               "সাধারণ সম্পাদক (General Secretary)",
+               "সহ সাধারণ সম্পাদক (Assistant General Secretary)",
+               "সাংগঠনিক সম্পাদক (Organizing Secretary)",
+               "অর্থ সম্পাদক (Treasurer)",
+               "সহ অর্থ সম্পাদক (Assistant Treasurer)",
+               "প্রচার সম্পাদক (Publicity Secretary)",
+               "সহ প্রচার সম্পাদক (Assistant Publicity Secretary)",
+               "মণ্ডপ পরিচালক (Pandal Director)",
+               "সদস্য (Member)"
+             ] &&
+             data.dob is string && data.dob.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.bloodGroup in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] &&
+             data.keyword is string && data.keyword.size() > 0 && data.keyword.size() < 50 &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    match /members/{memberId} {
+      // Public read for verification via QR code
+      allow get: if true;
+      
+      // Allow list and write for demo purposes (since we switched to local password auth)
+      // In a real app, this should be restricted to authorized users
+      allow list: if true;
+      
+      // Anyone can apply
+      allow create: if isValidMember(request.resource.data) && 
+                      request.resource.data.status == 'pending';
+      
+      // Allow update/delete for demo
+      allow update: if isValidMember(request.resource.data);
+      allow delete: if true;
+    }
+  }
+}
